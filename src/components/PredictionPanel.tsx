@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown, Zap, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Target, Loader2, Brain } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 interface PredictionResult {
   predictedPrice: number;
@@ -62,47 +64,69 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
             onClick={handlePredict}
             disabled={currentData.length === 0 || predicting || isLoading}
             className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-primary"
+            size="lg"
           >
-            {predicting ? "Analyzing..." : "Predict Next Price"}
+            {predicting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing Market Data...
+              </>
+            ) : (
+              <>
+                <Brain className="mr-2 h-4 w-4" />
+                Generate AI Prediction
+              </>
+            )}
           </Button>
 
           {prediction && (
             <div className="space-y-4 animate-slide-up">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-background/50 border-border">
+                <Card className="bg-gradient-to-br from-card to-card/80 border-accent/30">
                   <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <Target className="h-4 w-4 text-primary" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Predicted Price</p>
-                        <p className="text-xl font-bold text-foreground">
-                          {formatCurrency(prediction.predictedPrice)}
-                        </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-4 w-4 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Predicted Price</p>
+                          <p className="text-xl font-bold text-foreground">
+                            {formatCurrency(prediction.predictedPrice)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">for {prediction.predictedDate}</p>
+                        </div>
                       </div>
+                      {prediction.trend === 'up' ? (
+                        <Badge variant="secondary" className="bg-success/20 text-success border-success/30">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          Bullish
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-destructive/20 text-destructive border-destructive/30">
+                          <TrendingDown className="h-3 w-3 mr-1" />
+                          Bearish
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-background/50 border-border">
+                <Card className="bg-gradient-to-br from-card to-card/80 border-accent/30">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-2">
-                      {prediction.trend === 'up' ? (
-                        <TrendingUp className="h-4 w-4 text-success" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 text-destructive" />
-                      )}
-                      <div>
-                        <p className="text-sm text-muted-foreground">Trend</p>
-                        <div className="flex items-center space-x-2">
-                          <p className={`text-xl font-bold ${
-                            prediction.trend === 'up' ? 'text-success' : 'text-destructive'
+                      <Brain className="h-4 w-4 text-primary" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">AI Confidence</p>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xl font-bold text-foreground">{prediction.confidence}%</span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            prediction.confidence >= 80 ? 'bg-success/20 text-success' :
+                            prediction.confidence >= 60 ? 'bg-warning/20 text-warning' :
+                            'bg-destructive/20 text-destructive'
                           }`}>
-                            {prediction.trend === 'up' ? 'Up' : 'Down'}
-                          </p>
-                          <span className="text-sm text-muted-foreground">
-                            ({prediction.confidence}% confidence)
+                            {prediction.confidence >= 80 ? 'High' : prediction.confidence >= 60 ? 'Medium' : 'Low'}
                           </span>
                         </div>
+                        <Progress value={prediction.confidence} className="h-2" />
                       </div>
                     </div>
                   </CardContent>

@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface StockData {
   date: string;
@@ -13,6 +15,8 @@ interface StockData {
 interface StockChartProps {
   data: StockData[];
   ticker: string;
+  isLoading?: boolean;
+  error?: string;
   stats?: {
     avgClose: number;
     highestPrice: number;
@@ -20,7 +24,7 @@ interface StockChartProps {
   };
 }
 
-const StockChart = ({ data, ticker, stats }: StockChartProps) => {
+const StockChart = ({ data, ticker, isLoading = false, error, stats }: StockChartProps) => {
   const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
   const formatVolume = (value: number) => {
     if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
@@ -30,6 +34,29 @@ const StockChart = ({ data, ticker, stats }: StockChartProps) => {
   };
 
   const isPositiveTrend = data.length > 1 && data[data.length - 1].close > data[0].close;
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-24 rounded-lg" />
+        </div>
+        <Skeleton className="h-96 rounded-lg" />
+        <Skeleton className="h-64 rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

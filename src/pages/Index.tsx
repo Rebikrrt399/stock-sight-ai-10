@@ -128,11 +128,12 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 space-y-8">
         <StockSelector onFetchData={handleFetchData} isLoading={isLoading} />
         
-        {stockData.length > 0 && (
+        {(stockData.length > 0 || isLoading) && (
           <>
             <StockChart 
               data={stockData} 
               ticker={selectedTicker}
+              isLoading={isLoading}
               stats={calculateStats(stockData)}
             />
             
