@@ -5,20 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp, TrendingDown, Zap, Target, Loader2, Brain } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-
-interface PredictionResult {
-  predictedPrice: number;
-  trend: 'up' | 'down';
-  confidence: number;
-  predictedDate: string;
-}
-
-interface PredictionPanelProps {
-  ticker: string;
-  currentData: any[];
-  onPredict: () => Promise<PredictionResult>;
-  isLoading?: boolean;
-}
+import { PredictionPanelProps, PredictionResult } from "./types"; // Import the interface
 
 const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: PredictionPanelProps) => {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
@@ -30,22 +17,27 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
       const result = await onPredict();
       setPrediction(result);
     } catch (error) {
-      console.error('Prediction failed:', error);
+      console.error("Prediction failed:", error);
     }
     setPredicting(false);
   };
 
   const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
 
-  // Create chart data with prediction
-  const chartData = currentData.length > 0 ? [
-    ...currentData.slice(-30), // Last 30 days
-    ...(prediction ? [{
-      date: prediction.predictedDate,
-      close: prediction.predictedPrice,
-      isPredicted: true
-    }] : [])
-  ] : [];
+  const chartData = currentData.length > 0
+    ? [
+        ...currentData.slice(-30),
+        ...(prediction
+          ? [
+              {
+                date: prediction.predictedDate,
+                close: prediction.predictedPrice,
+                isPredicted: true
+              }
+            ]
+          : [])
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -59,8 +51,9 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
             Get AI-powered price predictions for {ticker}
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          <Button 
+          <Button
             onClick={handlePredict}
             disabled={currentData.length === 0 || predicting || isLoading}
             className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-primary"
@@ -81,7 +74,9 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
 
           {prediction && (
             <div className="space-y-4 animate-slide-up">
+              {/* Predicted Price & Trend */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Price Card */}
                 <Card className="bg-gradient-to-br from-card to-card/80 border-accent/30">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -95,7 +90,7 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
                           <p className="text-xs text-muted-foreground">for {prediction.predictedDate}</p>
                         </div>
                       </div>
-                      {prediction.trend === 'up' ? (
+                      {prediction.trend === "up" ? (
                         <Badge variant="secondary" className="bg-success/20 text-success border-success/30">
                           <TrendingUp className="h-3 w-3 mr-1" />
                           Bullish
@@ -110,6 +105,7 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
                   </CardContent>
                 </Card>
 
+                {/* Confidence Card */}
                 <Card className="bg-gradient-to-br from-card to-card/80 border-accent/30">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-2">
@@ -119,11 +115,11 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xl font-bold text-foreground">{prediction.confidence}%</span>
                           <span className={`text-xs px-2 py-1 rounded-full ${
-                            prediction.confidence >= 80 ? 'bg-success/20 text-success' :
-                            prediction.confidence >= 60 ? 'bg-warning/20 text-warning' :
-                            'bg-destructive/20 text-destructive'
+                            prediction.confidence >= 80 ? "bg-success/20 text-success" :
+                            prediction.confidence >= 60 ? "bg-warning/20 text-warning" :
+                            "bg-destructive/20 text-destructive"
                           }`}>
-                            {prediction.confidence >= 80 ? 'High' : prediction.confidence >= 60 ? 'Medium' : 'Low'}
+                            {prediction.confidence >= 80 ? "High" : prediction.confidence >= 60 ? "Medium" : "Low"}
                           </span>
                         </div>
                         <Progress value={prediction.confidence} className="h-2" />
@@ -133,6 +129,7 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
                 </Card>
               </div>
 
+              {/* Chart */}
               {chartData.length > 0 && (
                 <Card className="bg-background/50 border-border">
                   <CardHeader>
@@ -146,65 +143,49 @@ const PredictionPanel = ({ ticker, currentData, onPredict, isLoading }: Predicti
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis 
-                            dataKey="date" 
+                          <XAxis
+                            dataKey="date"
                             stroke="hsl(var(--muted-foreground))"
                             fontSize={12}
                             tickFormatter={(value) => new Date(value).toLocaleDateString()}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke="hsl(var(--muted-foreground))"
                             fontSize={12}
                             tickFormatter={formatCurrency}
                           />
-                          <Tooltip 
+                          <Tooltip
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--popover))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px',
-                              color: 'hsl(var(--foreground))'
+                              backgroundColor: "hsl(var(--popover))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                              color: "hsl(var(--foreground))",
                             }}
                             labelFormatter={(value) => new Date(value).toLocaleDateString()}
                             formatter={(value, name, props) => [
-                              formatCurrency(Number(value)), 
-                              props.payload.isPredicted ? 'Predicted Price' : 'Close Price'
+                              formatCurrency(Number(value)),
+                              props.payload.isPredicted ? "Predicted Price" : "Close Price",
                             ]}
                           />
-                          <Line 
-                            type="monotone" 
-                            dataKey="close" 
-                            stroke="hsl(var(--primary))" 
+                          <Line
+                            type="monotone"
+                            dataKey="close"
+                            stroke="hsl(var(--primary))"
                             strokeWidth={2}
-                            dot={(props) => {
-                              if (props.payload.isPredicted) {
-                                return (
-                                  <circle 
-                                    cx={props.cx} 
-                                    cy={props.cy} 
-                                    r={6} 
-                                    fill="hsl(var(--warning))"
-                                    stroke="hsl(var(--warning))"
-                                    strokeWidth={2}
-                                    className="animate-pulse-glow"
-                                  />
-                                );
-                              }
-                              return null;
-                            }}
+                            dot={(props) =>
+                              props.payload.isPredicted ? (
+                                <circle
+                                  cx={props.cx}
+                                  cy={props.cy}
+                                  r={6}
+                                  fill="hsl(var(--warning))"
+                                  stroke="hsl(var(--warning))"
+                                  strokeWidth={2}
+                                  className="animate-pulse-glow"
+                                />
+                              ) : null
+                            }
                           />
-                          {/* Predicted portion as separate line */}
-                          {prediction && (
-                            <Line 
-                              type="monotone" 
-                              dataKey="close" 
-                              stroke="hsl(var(--warning))" 
-                              strokeWidth={2}
-                              strokeDasharray="5 5"
-                              connectNulls={false}
-                              data={chartData.filter(d => d.isPredicted)}
-                              dot={false}
-                            />
-                          )}
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
