@@ -4,14 +4,18 @@ import pandas as pd
 import torch
 from train import StockLSTM
 
+# Helper: base dir for backend files so code works when uvicorn is started from repo root
+BASE_DIR = os.path.dirname(__file__)
+
 def load_model(ticker="AAPL", seq_len=60):
     # ----------------------------
     # Load Dataset
     # ----------------------------
-    if not os.path.exists("all_stocks_5yr.csv"):
-        raise FileNotFoundError("❌ Dataset file 'all_stocks_5yr.csv' not found!")
+    csv_path = os.path.join(BASE_DIR, "all_stocks_5yr.csv")
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError("❌ Dataset file 'all_stocks_5yr.csv' not found at {csv_path}")
 
-    df = pd.read_csv("all_stocks_5yr.csv")
+    df = pd.read_csv(csv_path)
     stock = df[df['Name'] == ticker]['close'].values.reshape(-1, 1)
 
     if len(stock) < seq_len:
@@ -20,8 +24,8 @@ def load_model(ticker="AAPL", seq_len=60):
     # ----------------------------
     # Load Scaler
     # ----------------------------
-    scaler_min_file = f"{ticker}_scaler.npy"
-    scaler_scale_file = f"{ticker}_scale.npy"
+    scaler_min_file = os.path.join(BASE_DIR, f"{ticker}_scaler.npy")
+    scaler_scale_file = os.path.join(BASE_DIR, f"{ticker}_scale.npy")
 
     if not (os.path.exists(scaler_min_file) and os.path.exists(scaler_scale_file)):
         raise FileNotFoundError(f"❌ Scaler files for {ticker} not found. Train the model first.")
@@ -38,7 +42,7 @@ def load_model(ticker="AAPL", seq_len=60):
     # ----------------------------
     # Load Trained Model
     # ----------------------------
-    model_path = f"./saved_models/{ticker}_lstm.pt"
+    model_path = os.path.join(BASE_DIR, "saved_models", f"{ticker}_lstm.pt")
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"❌ Model file not found at {model_path}. Train the model first.")
 
