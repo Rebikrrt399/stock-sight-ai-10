@@ -6,6 +6,9 @@ import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 import torch.nn.functional as F
 
+# Base directory for backend files so code works when cwd != backend
+BASE_DIR = os.path.dirname(__file__)
+
 # -------------------------
 # LSTM Model
 # -------------------------
@@ -25,7 +28,7 @@ class StockLSTM(nn.Module):
 # -------------------------
 def load_model(ticker="AAPL"):
     model = StockLSTM()
-    model_path = f"./saved_models/{ticker}_lstm.pt"
+    model_path = os.path.join(BASE_DIR, "saved_models", f"{ticker}_lstm.pt")
     
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found at {model_path}")
@@ -34,8 +37,8 @@ def load_model(ticker="AAPL"):
     model.eval()
     
     # Load scaler parameters
-    scaler_min = np.load(f"{ticker}_scaler.npy")
-    scaler_scale = np.load(f"{ticker}_scale.npy")
+    scaler_min = np.load(os.path.join(BASE_DIR, f"{ticker}_scaler.npy"))
+    scaler_scale = np.load(os.path.join(BASE_DIR, f"{ticker}_scale.npy"))
     
     scaler = MinMaxScaler()
     scaler.min_ = scaler_min
@@ -47,10 +50,11 @@ def load_model(ticker="AAPL"):
 # Training Function
 # -------------------------
 def train_model(ticker="AAPL", epochs=100, seq_len=60):
-    os.makedirs("saved_models", exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, "saved_models"), exist_ok=True)
 
     # Load dataset
-    df = pd.read_csv("all_stocks_5yr.csv")
+    csv_path = os.path.join(BASE_DIR, "all_stocks_5yr.csv")
+    df = pd.read_csv(csv_path)
     stock = df[df['Name'] == ticker]['close'].values.reshape(-1, 1)
 
     if len(stock) < seq_len:
@@ -87,10 +91,10 @@ def train_model(ticker="AAPL", epochs=100, seq_len=60):
             print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.6f}")
 
     # Save model and scaler
-    model_path = f"./saved_models/{ticker}_lstm.pt"
+    model_path = os.path.join(BASE_DIR, "saved_models", f"{ticker}_lstm.pt")
     torch.save(model.state_dict(), model_path)
-    np.save(f"{ticker}_scaler.npy", scaler.min_)
-    np.save(f"{ticker}_scale.npy", scaler.scale_)
+    np.save(os.path.join(BASE_DIR, f"{ticker}_scaler.npy"), scaler.min_)
+    np.save(os.path.join(BASE_DIR, f"{ticker}_scale.npy"), scaler.scale_)
 
     print(f"✅ Model trained & saved at: {model_path}")
     print(f"✅ Scaler saved as: {ticker}_scaler.npy & {ticker}_scale.npy")
